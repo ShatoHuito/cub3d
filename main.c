@@ -1,33 +1,60 @@
 #include "cub3d.h"
 
 
-void            my_mlx_pixel_put(t_data *data, int x, int y, int color)
+void            my_mlx_pixel_put(t_data *data, int x, int y, unsigned int color)
 {
     char    *dst;
 
-    dst = data->addr + (x * data->line_length + y * (data->bits_per_pixel / 8));
+    dst = data->addr + (y * data->line_length + x * (data->bits_per_pixel / 8));
     *(unsigned int*)dst = color;
 }
 
-
-int key_hook(int keycode, t_data *img)
+unsigned int           my_mlx_pixel_ret(t_txt *txt, int x, int y)
 {
-	if (keycode == 126)
-	{
-		img->y += sin(img->dir) * 1;
-		img->x += cos(img->dir) * 1;
-	}
-	if (keycode == 125)
-	{
-		img->y -= sin(img->dir) * 1;
-		img->x -= cos(img->dir) * 1;
-	}
-    if(keycode == 123)
-        img->dir -= 0.05;
-    if(keycode == 124)
-        img->dir += 0.05;
+    char    *dst;
 
-    draw(img->p_map, img);
+    dst = txt->imgData + (y * txt->txt_size_line + x * (txt->txt_bit_pix / 8));
+	return (*(unsigned int *)dst);
+}
+
+
+int key_hook(int key, t_data *img)
+{
+	double rotspeed = 0.07;
+	if (key == 13)
+	{
+			img->posY += img->dirY * 0.2;
+			img->posX += img->dirX * 0.2;
+	}
+	if (key == 1)
+	{
+			img->posY -= img->dirY * 0.2;
+			img->posX -= img->dirX * 0.2;
+	}
+	if (key == 2)
+	{
+		double oldDirX = img->dirX;
+		img->dirX = img->dirX * cos(-rotspeed) - img->dirY * sin(-rotspeed);
+		img->dirY = oldDirX * sin(-rotspeed) + img->dirY * cos(-rotspeed);
+		double oldPlaneX = img->planeX;
+		img->planeX = img->planeX * cos (-rotspeed) - img->planeY *
+																sin(-rotspeed);
+		img->planeY = oldPlaneX * sin (-rotspeed) + img->planeY * cos
+				(-rotspeed);
+	}
+	if (key == 0)
+	{
+		double oldDirX = img->dirX;
+		img->dirX = img->dirX * cos (rotspeed) - img->dirY * sin
+				(rotspeed);
+		img->dirY = oldDirX * sin(rotspeed) + img->dirY * cos(rotspeed);
+		double oldPlaneX = img->planeX;
+		img->planeX = img->planeX * cos (rotspeed) - img->planeY *
+															   sin(rotspeed);
+		img->planeY = oldPlaneX * sin (rotspeed) + img->planeY * cos
+				(rotspeed);
+	}
+    raycast(img->p_map, img);
     return (0);
 }
 
@@ -35,14 +62,23 @@ int key_hook(int keycode, t_data *img)
 void    window(char **map)
 {
     t_data  img;
-    img.rspwn_flag = 0;
+    t_txt txt;
+    img.txt = &txt;
     img.p_map = map;
+    img.posX = 5;
+    img.posY = 5; // положение игрока
+    img.planeX = 0;
+    img.planeY = 0.66; //угол обзора
+    img.dirX = -1;
+    img.dirY = 0; // направление игрока
+    img.floor_color = 0x666666;
+    img.roof_color = 0x3366FF;
 
     img.mlx = mlx_init();
-    img.mlx_win = mlx_new_window(img.mlx, RES_Y, RES_X, "Hello world!");
-    img.img = mlx_new_image(img.mlx, RES_Y, RES_X);
+    img.mlx_win = mlx_new_window(img.mlx, RES_X, RES_Y, "Hello world!");
+    img.img = mlx_new_image(img.mlx, RES_X, RES_Y);
     img.addr = mlx_get_data_addr(img.img, &img.bits_per_pixel, &img.line_length, &img.endian);
-    draw(map, &img);
+	raycast(map, &img);
     mlx_hook(img.mlx_win, 2, 1L<<0, key_hook, &img);
     mlx_loop(img.mlx);
 }
