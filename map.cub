@@ -1,0 +1,18 @@
+NO ./textures/1.xpm
+SO ./textures/wood.xpm
+WE ./textures/bluestone.xpm
+EA ./textures/zemlya.xpm
+S ./textures/barrel.xpm
+
+R  800  600
+F  255,  111, 255
+C 110,255,255
+
+1111111
+1210001
+1022201
+1022201
+1022201
+1022201
+1000N01
+1111111
